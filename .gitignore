@@ -1,0 +1,56 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+out/
+artifacts/
+
+# Test output
+[Tt]est[Rr]esult*/
+[Bb]enchmark[Dd]ot[Nn]et.Artifacts/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+logs/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+.nuget/
+
+# .NET tools and local caches
+.dotnet/
+
+# Visual Studio
+.vs/
+
+# Visual Studio Code
+.vscode/*
+!.vscode/mcp.json
+!.vscode/extensions.json
+
+# Rider / ReSharper
+.idea/
+_ReSharper*/
+*.DotSettings.user
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Node (if ever added for tooling)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+*.cache

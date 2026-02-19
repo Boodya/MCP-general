@@ -1,0 +1,18 @@
+{
+  "servers": {
+    "mcpGenericLocal": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/src/McpGenericServer/McpGenericServer.csproj"
+      ],
+      "env": {
+        "DOTNET_NOLOGO": "1",
+        "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+        "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1"
+      }
+    }
+  }
+}
