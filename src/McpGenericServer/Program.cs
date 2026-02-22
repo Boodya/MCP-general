@@ -1,40 +1,25 @@
-﻿using McpGenericServer.Tools;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Server;
+using McpGenericServer.Tools;
+using McpPlatform.Hosting.Extensions;
 
-await RunStdioAsync(RemoveLegacyFlags(args));
+// HTTP MCP server hosted in IIS via ASP.NET Core.
+// Exposes:
+//   GET  /sse      – SSE stream (MCP session initiation)
+//   POST /message  – MCP message endpoint
+//
+// Plugin DLLs placed in /plugins are discovered and loaded automatically.
 
-return;
+var builder = WebApplication.CreateBuilder(args);
 
-static async Task RunStdioAsync(string[] args)
-{
-    var builder = Host.CreateApplicationBuilder(args);
-    builder.Logging.ClearProviders();
-    builder.Logging.AddConsole(options =>
-    {
-        options.LogToStandardErrorThreshold = LogLevel.Trace;
-    });
+builder.Services.AddMcpPlugins(builder.Configuration);
 
-    RegisterStdioServer(builder.Services);
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithTools<EchoTool>()
+    .WithTools<UtcNowTool>();
 
-    await builder.Build().RunAsync();
-}
+var app = builder.Build();
 
-static void RegisterStdioServer(IServiceCollection services)
-{
-    services
-        .AddMcpServer()
-        .WithStdioServerTransport()
-        .WithTools<EchoTool>()
-        .WithTools<UtcNowTool>();
-}
+app.MapMcp();
 
-static string[] RemoveLegacyFlags(string[] args)
-{
-    return args
-        .Where(arg => !string.Equals(arg, "--stdio", StringComparison.OrdinalIgnoreCase))
-        .Where(arg => !string.Equals(arg, "--ui", StringComparison.OrdinalIgnoreCase))
-        .ToArray();
-}
+await app.RunAsync();

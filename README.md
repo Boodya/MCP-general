@@ -1,50 +1,120 @@
-# MCP Generic Server (.NET)
+# MCP Platform (.NET)
 
-MCP server based on the official `modelcontextprotocol/csharp-sdk` packages.
+Plugin-based MCP server platform. Write tools once, deploy anywhere.
 
-## What is included
+## Package structure
 
-- Official SDK hosting via `AddMcpServer()`
-- Stdio transport via `.WithStdioServerTransport()`
-- Tool registration via SDK attributes (`[McpServerToolType]`, `[McpServerTool]`)
-- Two sample tools:
-  - `echo`
-  - `utc_now`
-- Integration tests using official client/server transports
+| Package | Role |
+|---|---|
+| `McpPlatform.Core` | Contracts only — `IMcpPlugin`, `PluginDescriptor`, `PluginLoadException` |
+| `McpPlatform.Hosting` | Plugin loader, `McpStdioHostBuilder`, DI extensions |
+| `McpGenericServer` | Reference stdio server — runs built-in tools + loads plugins dynamically |
 
-## Project layout
+## How plugins work
 
-- `src/McpGenericServer/Tools` — MCP SDK tool types
-- `src/McpGenericServer/Program.cs` — MCP host bootstrap for stdio
-- `tests/McpGenericServer.Tests` — MCP SDK integration tests
+At startup, `McpGenericServer` scans the `plugins/` directory.  
+Every `.dll` that contains a class implementing `IMcpPlugin` is loaded into an isolated  
+`AssemblyLoadContext` and its `Register()` method is called.  
+The plugin registers its own tools, HTTP clients, config bindings — anything it needs.
 
-## Run
-
-```bash
-dotnet run --project src/McpGenericServer/McpGenericServer.csproj
+```
+McpGenericServer.exe
+└── plugins/
+    ├── MyCompany.Mcp.Crm.dll       ← loaded automatically
+    ├── MyCompany.Mcp.Crm.deps.json ← required for dependency resolution
+    └── MyCompany.Mcp.Hr.dll        ← loaded automatically
 ```
 
-The process communicates over stdin/stdout using the official SDK transport and is intended to be launched by an MCP client/host.
+## Writing a plugin (in a separate repo)
 
-## Test
+### 1. Install NuGet
 
-```bash
-dotnet test McpGenericServer.sln
+```xml
+<PackageReference Include="McpPlatform.Core" Version="1.0.0" />
+<PackageReference Include="ModelContextProtocol" Version="0.8.0-preview.1" />
 ```
 
-## Add a new tool
+### 2. Implement IMcpPlugin
 
-1. Create a class in `src/McpGenericServer/Tools` and mark it with `[McpServerToolType]`.
-2. Add a method with `[McpServerTool]` and `Description` attributes.
-3. Register tool type in `Program.cs` with `.WithTools<YourToolType>()`.
+```csharp
+using McpPlatform.Core.Plugins;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.Server;
 
-Example pattern:
+public sealed class CrmPlugin : IMcpPlugin
+{
+    public string Name => "Crm";
+    public string Version => "1.0.0";
+
+    public void Register(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddHttpClient<ICrmClient, CrmClient>(client =>
+        {
+            client.BaseAddress = new Uri(configuration["Crm:BaseUrl"]!);
+        });
+
+        services
+            .AddMcpServer()
+            .WithTools<CrmTools>();
+    }
+}
+```
+
+### 3. Write your tools normally
 
 ```csharp
 [McpServerToolType]
-public sealed class MyTools
+public sealed class CrmTools
 {
-  [McpServerTool(Name = "my_tool")]
-  public static string MyTool(string input) => $"You sent: {input}";
+    private readonly ICrmClient _crm;
+
+    public CrmTools(ICrmClient crm) => _crm = crm;
+
+    [McpServerTool(Name = "crm_get_customer"), Description("Returns customer by ID.")]
+    public async Task<CustomerResult> GetCustomer(
+        [Description("Customer ID")] string id,
+        CancellationToken cancellationToken)
+    {
+        var customer = await _crm.GetCustomerAsync(id, cancellationToken);
+        return new CustomerResult(customer.Id, customer.Name);
+    }
+
+    public sealed record CustomerResult(string Id, string Name);
 }
+```
+
+### 4. Deploy
+
+Copy the plugin's build output into `plugins/` next to `McpGenericServer.exe`.  
+The server discovers and loads it on next startup — no recompilation needed.
+
+## Configuration
+
+`appsettings.json` or environment variables:
+
+```json
+{
+  "Mcp": {
+    "PluginsDirectory": "plugins",
+    "FailFastOnPluginError": false
+  }
+}
+```
+
+## Connecting clients
+
+See **[docs/connecting-clients.md](docs/connecting-clients.md)** for step-by-step instructions on:
+
+- VS Code / GitHub Copilot Chat (`.vscode/mcp.json`)
+- Claude Desktop
+- Programmatic connection from .NET, Python, and TypeScript
+- Environment variables and `appsettings.json` configuration
+- Placing plugins in the `plugins/` directory
+
+## Build & test
+
+```bash
+dotnet build McpGenericServer.sln
+dotnet test McpGenericServer.sln
 ```
