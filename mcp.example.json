@@ -1,0 +1,14 @@
+{
+    "servers": {
+        "Local-General-MCP": {
+            "type": "stdio",
+            "command": "dotnet",
+            "args": ["run", "--project", "D:/Personal-Repos/MCP-general/src/McpGenericServer/McpGenericServer.csproj"],
+            "env": {
+                "Confluence__BaseUrl": "https://wiki/",
+                "Confluence__AuthType": "Pat",
+                "Confluence__PersonalAccessToken": "${input:confluencePat}"
+            }
+        }
+    }
+}

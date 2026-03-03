@@ -9,6 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" Version="1.0.0" />
+    <!--
+      Microsoft.Extensions.Http is NOT part of the Microsoft.NETCore.App shared framework
+      (that would require Microsoft.AspNetCore.App). Plugins that call AddHttpClient<T>()
+      need this assembly present in the host output so their isolated PluginLoadContext
+      can fall back to the default AssemblyLoadContext and resolve it.
+    -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +28,9 @@
       assembly reference — the plugin is loaded dynamically at runtime.
     -->
     <ProjectReference Include="..\McpTools.BuiltIn\McpTools.BuiltIn.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="None" />
+    <ProjectReference Include="..\McpTools.Confluence\McpTools.Confluence.csproj"
                       ReferenceOutputAssembly="false"
                       OutputItemType="None" />
   </ItemGroup>

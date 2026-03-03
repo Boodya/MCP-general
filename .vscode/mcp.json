@@ -1,9 +1,0 @@
-{
-  "servers": {
-    "mcpGenericLocal": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": ["run", "--project", "${workspaceFolder}/src/McpGenericServer/McpGenericServer.csproj"]
-    }
-  }
-}

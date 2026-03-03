@@ -1,0 +1,23 @@
+[40m[32minfo[39m[22m[49m: McpPlatform.Hosting.Loading.PluginLoader[0]
+      Plugin loaded: McpTools.BuiltIn v1.0.0 from 'D:\Personal-Repos\MCP-general\src\McpGenericServer\bin\Debug\net10.0\plugins\McpTools.BuiltIn.dll'
+[41m[30mfail[39m[22m[49m: McpPlatform.Hosting.Loading.PluginLoader[0]
+      Plugin load failed, skipping assembly 'D:\Personal-Repos\MCP-general\src\McpGenericServer\bin\Debug\net10.0\plugins\McpTools.Confluence.dll'
+      McpPlatform.Core.Plugins.PluginLoadException: [D:\Personal-Repos\MCP-general\src\McpGenericServer\bin\Debug\net10.0\plugins\McpTools.Confluence.dll] Plugin 'McpTools.Confluence' threw during Register().
+       ---> System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.Extensions.Http, Version=9.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60'. The system cannot find the file specified.
+      File name: 'Microsoft.Extensions.Http, Version=9.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60'
+         at McpTools.Confluence.ConfluencePlugin.Register(IServiceCollection services, IConfiguration configuration)
+         at McpTools.Confluence.ConfluencePlugin.Register(IServiceCollection services, IConfiguration configuration)
+         at McpPlatform.Hosting.Loading.PluginLoader.LoadSinglePlugin(String assemblyPath, IServiceCollection services, IConfiguration configuration) in D:\Personal-Repos\MCP-general\src\McpPlatform.Hosting\Loading\PluginLoader.cs:line 105
+         --- End of inner exception stack trace ---
+         at McpPlatform.Hosting.Loading.PluginLoader.LoadSinglePlugin(String assemblyPath, IServiceCollection services, IConfiguration configuration) in D:\Personal-Repos\MCP-general\src\McpPlatform.Hosting\Loading\PluginLoader.cs:line 109
+         at McpPlatform.Hosting.Loading.PluginLoader.LoadPlugins(String pluginsDirectory, IServiceCollection services, IConfiguration configuration) in D:\Personal-Repos\MCP-general\src\McpPlatform.Hosting\Loading\PluginLoader.cs:line 49
+[40m[32minfo[39m[22m[49m: McpPlatform.Hosting.Loading.PluginLoader[0]
+      1 plugin(s) loaded from 'D:\Personal-Repos\MCP-general\src\McpGenericServer\bin\Debug\net10.0\plugins'
+[40m[32minfo[39m[22m[49m: ModelContextProtocol.Server.StdioServerTransport[857250842]
+      Server (stream) (McpGenericServer) transport reading messages.
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Content root path: D:\Personal-Repos\MCP-general
