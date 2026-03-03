@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Plugin assemblies must not be executable. -->
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\McpPlatform.Core\McpPlatform.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    After every build, copy the plugin DLL into the McpGenericServer output plugins folder
+    so the server's PluginLoader can discover it without any manual steps.
+  -->
+  <Target Name="CopyPluginToServer" AfterTargets="Build">
+    <PropertyGroup>
+      <ServerPluginsDir>$(MSBuildThisFileDirectory)..\McpGenericServer\bin\$(Configuration)\net10.0\plugins\</ServerPluginsDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(ServerPluginsDir)" />
+    <Copy
+      SourceFiles="$(OutputPath)$(TargetFileName)"
+      DestinationFolder="$(ServerPluginsDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

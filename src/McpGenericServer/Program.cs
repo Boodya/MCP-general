@@ -1,25 +1,14 @@
-using McpGenericServer.Tools;
-using McpPlatform.Hosting.Extensions;
+﻿using McpPlatform.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.Server;
 
-// HTTP MCP server hosted in IIS via ASP.NET Core.
-// Exposes:
-//   GET  /sse      – SSE stream (MCP session initiation)
-//   POST /message  – MCP message endpoint
-//
-// Plugin DLLs placed in /plugins are discovered and loaded automatically.
+// Stdio MCP server — launched directly by the MCP client (e.g. VS Code).
+// Tool implementations live in separate plugin assemblies under /plugins and are
+// discovered automatically by PluginLoader at startup.
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddMcpPlugins(builder.Configuration);
-
-builder.Services
-    .AddMcpServer()
-    .WithHttpTransport()
-    .WithTools<EchoTool>()
-    .WithTools<UtcNowTool>();
-
-var app = builder.Build();
-
-app.MapMcp();
-
-await app.RunAsync();
+await McpStdioHostBuilder.RunAsync(args, (services, _) =>
+{
+    services
+        .AddMcpServer()
+        .WithStdioServerTransport();
+});

@@ -1,8 +1,9 @@
 {
   "servers": {
     "mcpGenericLocal": {
-      "type": "http",
-      "url": "http://localhost:15756"
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "${workspaceFolder}/src/McpGenericServer/McpGenericServer.csproj"]
     }
   }
 }

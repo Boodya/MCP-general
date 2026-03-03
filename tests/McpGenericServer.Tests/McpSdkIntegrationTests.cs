@@ -1,5 +1,6 @@
 using System.IO.Pipelines;
-using McpGenericServer.Tools;
+using McpTools.BuiltIn;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -63,13 +64,16 @@ public sealed class McpSdkIntegrationTests
 
             var services = new ServiceCollection();
             services.AddLogging();
+
+            // Register tools via the real plugin path — same as runtime behaviour.
+            var plugin = new BuiltInToolsPlugin();
+            plugin.Register(services, new ConfigurationBuilder().Build());
+
             services
                 .AddMcpServer()
                 .WithStreamServerTransport(
                     clientToServerPipe.Reader.AsStream(),
-                    serverToClientPipe.Writer.AsStream())
-                .WithTools<EchoTool>()
-                .WithTools<UtcNowTool>();
+                    serverToClientPipe.Writer.AsStream());
 
             var serviceProvider = services.BuildServiceProvider();
             var server = serviceProvider.GetRequiredService<McpServer>();
