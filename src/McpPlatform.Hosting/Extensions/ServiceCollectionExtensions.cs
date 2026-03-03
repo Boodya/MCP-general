@@ -36,8 +36,15 @@ public static class ServiceCollectionExtensions
         var options = bootstrap.GetRequiredService<IOptions<McpHostOptions>>().Value;
         var logger = bootstrap.GetRequiredService<ILoggerFactory>().CreateLogger<PluginLoader>();
 
+        // Resolve relative paths against the application base directory (where the DLLs live),
+        // not the current working directory (which may be the user's home folder when launched
+        // by an MCP client via 'dotnet run').
+        var pluginsDirectory = Path.IsPathRooted(options.PluginsDirectory)
+            ? options.PluginsDirectory
+            : Path.GetFullPath(options.PluginsDirectory, AppContext.BaseDirectory);
+
         var loader = new PluginLoader(logger);
-        loader.LoadPlugins(options.PluginsDirectory, services, configuration);
+        loader.LoadPlugins(pluginsDirectory, services, configuration);
 
         return services;
     }
