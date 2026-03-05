@@ -28,11 +28,16 @@ public sealed class PluginLoader
     /// <param name="pluginsDirectory">Absolute or relative path to the plugins folder.</param>
     /// <param name="services">Host DI container to register plugin services into.</param>
     /// <param name="configuration">Host configuration passed to each plugin.</param>
+    /// <param name="ignoredFileNames">
+    /// Optional set of file names (e.g. <c>"McpTools.Confluence.dll"</c>) to skip.
+    /// Comparison is case-insensitive; only the bare file name is matched.
+    /// </param>
     /// <returns>Descriptors of successfully loaded plugins.</returns>
     public IReadOnlyList<PluginDescriptor> LoadPlugins(
         string pluginsDirectory,
         IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IReadOnlyCollection<string>? ignoredFileNames = null)
     {
         if (!Directory.Exists(pluginsDirectory))
         {
@@ -44,6 +49,13 @@ public sealed class PluginLoader
 
         foreach (var assemblyPath in Directory.EnumerateFiles(pluginsDirectory, "*.dll", SearchOption.TopDirectoryOnly))
         {
+            var fileName = Path.GetFileName(assemblyPath);
+            if (IsIgnored(fileName, ignoredFileNames))
+            {
+                _logger.LogInformation("Plugin '{FileName}' is in the ignore list, skipping.", fileName);
+                continue;
+            }
+
             try
             {
                 var descriptor = LoadSinglePlugin(assemblyPath, services, configuration);
@@ -138,4 +150,8 @@ public sealed class PluginLoader
                 $"Only one is allowed per assembly: {string.Join(", ", pluginTypes.Select(t => t.FullName))}")
         };
     }
+
+    private static bool IsIgnored(string fileName, IReadOnlyCollection<string>? ignoredFileNames) =>
+        ignoredFileNames is { Count: > 0 } &&
+        ignoredFileNames.Any(n => string.Equals(n, fileName, StringComparison.OrdinalIgnoreCase));
 }

@@ -44,7 +44,7 @@ public static class ServiceCollectionExtensions
             : Path.GetFullPath(options.PluginsDirectory, AppContext.BaseDirectory);
 
         var loader = new PluginLoader(logger);
-        loader.LoadPlugins(pluginsDirectory, services, configuration);
+        loader.LoadPlugins(pluginsDirectory, services, configuration, options.PluginIgnore);
 
         return services;
     }

@@ -20,4 +20,18 @@ public sealed class McpHostOptions
     /// When <c>false</c> (default), the failing plugin is skipped with a warning.
     /// </summary>
     public bool FailFastOnPluginError { get; set; } = false;
+
+    /// <summary>
+    /// File names of plugin assemblies to exclude from loading.
+    /// Only the bare file name is matched (e.g. <c>"McpTools.Confluence.dll"</c>),
+    /// not a full or relative path. Comparison is case-insensitive.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// "Mcp": {
+    ///   "PluginIgnore": [ "McpTools.Confluence.dll" ]
+    /// }
+    /// </code>
+    /// </example>
+    public List<string> PluginIgnore { get; set; } = [];
 }

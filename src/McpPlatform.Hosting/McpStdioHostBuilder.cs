@@ -32,6 +32,14 @@ public static class McpStdioHostBuilder
 
         var builder = Host.CreateApplicationBuilder(sanitizedArgs);
 
+        // When launched via 'dotnet run' by an MCP client, the process working directory
+        // is typically the client's workspace root, not the project/binary directory.
+        // Add an explicit appsettings.json source from the binary output directory so that
+        // the compiled configuration (including PluginIgnore etc.) is always found,
+        // regardless of working directory.
+        var binaryDirSettings = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+        builder.Configuration.AddJsonFile(binaryDirSettings, optional: true, reloadOnChange: false);
+
         // MCP stdio servers must not write anything to stdout except protocol messages.
         // Route all log output to stderr.
         builder.Logging.ClearProviders();
