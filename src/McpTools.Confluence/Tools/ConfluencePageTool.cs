@@ -32,9 +32,10 @@ public sealed class ConfluencePageTool(ConfluenceClient confluenceClient) : IMcp
     [Description(
         "Creates a new Confluence page in the specified space. " +
         "Returns the newly created page with its ID and URL. " +
-        "Content must be in Confluence Storage Format (a subset of XHTML). " +
-        "Minimal example: '<p>Hello world</p>'. " +
-        "Use '<h1>Heading</h1>', '<ul><li>item</li></ul>', '<ac:structured-macro ...>' etc. " +
+        "Content can be in Confluence Storage Format (XHTML) or Wiki Markup — " +
+        "set the 'representation' parameter accordingly. " +
+        "Storage format example: '<p>Hello world</p>'. " +
+        "Wiki markup example: 'h2. Hello\n*bold* text'. " +
         "Optionally provide a parent page ID to nest the page in the hierarchy.")]
     public async Task<ConfluencePageResponse> CreatePageAsync(
         [Description("Space key where the page will be created (e.g. 'DEV', 'TEAM').")]
@@ -44,9 +45,15 @@ public sealed class ConfluencePageTool(ConfluenceClient confluenceClient) : IMcp
         string title,
 
         [Description(
-            "Page body in Confluence Storage Format (XHTML). " +
-            "Example: '<p>This is <strong>bold</strong> text.</p>'")]
+            "Page body content. Format depends on the 'representation' parameter. " +
+            "Storage format example: '<p>This is <strong>bold</strong> text.</p>'. " +
+            "Wiki markup example: 'h2. Heading\n*bold* _italic_'.")]
         string storageContent,
+
+        [Description(
+            "Content format: 'storage' for Confluence Storage Format (XHTML), " +
+            "'wiki' for Confluence Wiki Markup. Defaults to 'storage'.")]
+        string representation = "storage",
 
         [Description("Optional parent page ID. When provided, the new page is created as a child.")]
         string? parentPageId = null,
@@ -62,7 +69,7 @@ public sealed class ConfluencePageTool(ConfluenceClient confluenceClient) : IMcp
             Title:     title,
             Space:     new SpaceRef(spaceKey),
             Ancestors: ancestors,
-            Body:      new BodyRequest(new StorageBody(storageContent)));
+            Body:      new BodyRequest(new StorageBody(storageContent, representation)));
 
         var page = await confluenceClient.CreatePageAsync(request, cancellationToken);
         return MapToResponse(page);
@@ -75,9 +82,10 @@ public sealed class ConfluencePageTool(ConfluenceClient confluenceClient) : IMcp
         "Updates the title and/or body of an existing Confluence page. " +
         "You MUST provide the current version number (obtain it via confluence_get_page). " +
         "The API will automatically use version + 1 as the new version. " +
-        "Content must be in Confluence Storage Format (XHTML). " +
+        "Content can be in Confluence Storage Format (XHTML) or Wiki Markup — " +
+        "set the 'representation' parameter accordingly. " +
         "To preserve the existing body, first fetch it with confluence_get_page " +
-        "and pass the storageContent back unchanged.")]
+        "and pass the storageContent back unchanged (with representation='storage').")]
     public async Task<ConfluencePageResponse> UpdatePageAsync(
         [Description("The numeric Confluence page ID to update.")]
         string pageId,
@@ -86,7 +94,7 @@ public sealed class ConfluencePageTool(ConfluenceClient confluenceClient) : IMcp
         string title,
 
         [Description(
-            "New page body in Confluence Storage Format (XHTML). " +
+            "New page body content. Format depends on the 'representation' parameter. " +
             "Replaces the entire page content.")]
         string storageContent,
 
@@ -95,6 +103,11 @@ public sealed class ConfluencePageTool(ConfluenceClient confluenceClient) : IMcp
             "The update will be saved as version + 1.")]
         int currentVersion,
 
+        [Description(
+            "Content format: 'storage' for Confluence Storage Format (XHTML), " +
+            "'wiki' for Confluence Wiki Markup. Defaults to 'storage'.")]
+        string representation = "storage",
+
         CancellationToken cancellationToken = default)
     {
         var request = new UpdatePageRequest(
@@ -102,7 +115,7 @@ public sealed class ConfluencePageTool(ConfluenceClient confluenceClient) : IMcp
             Type:    "page",
             Title:   title,
             Version: new VersionRef(currentVersion + 1),
-            Body:    new BodyRequest(new StorageBody(storageContent)));
+            Body:    new BodyRequest(new StorageBody(storageContent, representation)));
 
         var page = await confluenceClient.UpdatePageAsync(pageId, request, cancellationToken);
         return MapToResponse(page);
