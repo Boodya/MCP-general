@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 
@@ -17,6 +18,7 @@ public sealed class ConfluenceClient
         PropertyNamingPolicy        = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition      = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
         PropertyNameCaseInsensitive = true,
+        Encoder                     = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
     private readonly HttpClient _http;
@@ -124,6 +126,43 @@ public sealed class ConfluenceClient
     {
         var url = $"{_baseUrl}/rest/api/content/{Uri.EscapeDataString(pageId)}";
         return await PutAsync<UpdatePageRequest, ConfluencePage>(url, request, ct);
+    }
+
+    // ─── Upload attachment ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Uploads (or updates) a file as an attachment on a Confluence page.
+    /// Uses the "X-Atlassian-Token: no-check" header required by the attachment API.
+    /// </summary>
+    public async Task<ConfluenceAttachment> UploadAttachmentAsync(
+        string            pageId,
+        string            fileName,
+        byte[]            fileBytes,
+        string            contentType,
+        string?           comment = null,
+        CancellationToken ct      = default)
+    {
+        var url = $"{_baseUrl}/rest/api/content/{Uri.EscapeDataString(pageId)}/child/attachment";
+
+        using var form = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(fileBytes);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(fileContent, "file", fileName);
+
+        if (comment is not null)
+            form.Add(new StringContent(comment), "comment");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = form };
+        request.Headers.Add("X-Atlassian-Token", "no-check");
+
+        var response = await _http.SendAsync(request, ct);
+        await EnsureSuccessAsync(response);
+
+        var stream = await response.Content.ReadAsStreamAsync(ct);
+        var result = JsonSerializer.Deserialize<ConfluenceAttachmentResult>(stream, JsonOptions)
+            ?? throw new InvalidOperationException("Empty response body.");
+
+        return result.Results.First();
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

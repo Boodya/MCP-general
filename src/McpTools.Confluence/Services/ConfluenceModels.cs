@@ -84,3 +84,15 @@ public sealed record BodyRequest([property: JsonPropertyName("storage")] Storage
 public sealed record StorageBody(
     [property: JsonPropertyName("value")]          string Value,
     [property: JsonPropertyName("representation")] string Representation = "storage");
+
+// ─── Attachment responses ────────────────────────────────────────────────────
+
+public sealed record ConfluenceAttachmentResult(
+    [property: JsonPropertyName("results")] IReadOnlyList<ConfluenceAttachment> Results,
+    [property: JsonPropertyName("size")]    int Size);
+
+public sealed record ConfluenceAttachment(
+    [property: JsonPropertyName("id")]       string Id,
+    [property: JsonPropertyName("type")]     string Type,
+    [property: JsonPropertyName("title")]    string Title,
+    [property: JsonPropertyName("_links")]   ConfluenceLinks? Links);
